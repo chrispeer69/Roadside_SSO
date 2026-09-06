@@ -22,7 +22,7 @@ function MyApps({ apps }) {
                 <td><div className="row-flex"><Icon name={a.icon || "apps"} style={{ color: "var(--blue)", fontSize: 16 }} /><span className="n">{a.name}</span></div></td>
                 <td className="hide-mobile muted">{a.category}</td>
                 <td className="hide-mobile muted">{a.description}</td>
-                <td className="right"><a className="btn sm" href={`/launch/${a.id}`}>Open<Icon name="arrow-up-right" /></a></td>
+                <td className="right"><a className="btn sm" href={`/launch/${a.id}`} target="_blank" rel="noopener">Open<Icon name="arrow-up-right" /></a></td>
               </tr>
             ))}</tbody>
           </table></div>

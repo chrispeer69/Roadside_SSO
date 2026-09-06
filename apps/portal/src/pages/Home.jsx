@@ -79,7 +79,7 @@ export default function Home() {
 
 function Tile({ app }) {
   return (
-    <a className={`tile ${app.pinned ? "pinned" : ""}`} href={`/launch/${app.id}`} title={`Open ${app.name}`}>
+    <a className={`tile ${app.pinned ? "pinned" : ""}`} href={`/launch/${app.id}`} target="_blank" rel="noopener" title={`Open ${app.name} in a new tab`}>
       <span className="ic"><Icon name={app.icon || "apps"} /></span>
       <span className="grow">
         <span className="n">{app.name}</span>
