@@ -47,6 +47,14 @@ oidc.get("/.well-known/jwks.json", (req, res) => {
   res.json(getJwks());
 });
 
+// Keycloak-shaped aliases so services with a fixed "Keycloak" connector (Supabase Auth, some SaaS) can use Roadside
+// by pointing their realm URL at PUBLIC_URL. Same handlers, different paths.
+oidc.get("/protocol/openid-connect/auth", (req, res) => res.redirect(307, `/oauth/authorize${req.url.slice(req.path.length)}`));
+oidc.post("/protocol/openid-connect/token", (req, res, next) => { req.url = "/oauth/token"; oidc.handle(req, res, next); });
+oidc.all("/protocol/openid-connect/userinfo", (req, res, next) => { req.url = "/oauth/userinfo"; oidc.handle(req, res, next); });
+oidc.get("/protocol/openid-connect/certs", (req, res) => res.json(getJwks()));
+oidc.get("/protocol/openid-connect/logout", (req, res, next) => { req.url = `/oauth/logout${req.url.slice(req.path.length)}`; oidc.handle(req, res, next); });
+
 // ---------- /oauth/authorize ----------
 oidc.get("/oauth/authorize", wrap(async (req, res) => {
   const q = req.query;
