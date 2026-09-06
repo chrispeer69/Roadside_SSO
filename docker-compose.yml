@@ -1,0 +1,12 @@
+services:
+  db:
+    image: postgres:16
+    container_name: roadside-sso-postgres
+    environment:
+      POSTGRES_DB: roadside_sso
+      POSTGRES_USER: roadside
+      POSTGRES_PASSWORD: roadside
+    ports: ["5436:5432"]
+    volumes: [roadside_sso_db:/var/lib/postgresql/data]
+volumes:
+  roadside_sso_db:

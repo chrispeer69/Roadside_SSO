@@ -1,0 +1,15 @@
+{
+  "name": "@roadside/auth",
+  "version": "1.0.0",
+  "description": "Drop-in Roadside SSO client for connected websites: Express middleware, browser PKCE client, React provider.",
+  "type": "module",
+  "exports": {
+    "./server": "./server.js",
+    "./browser": "./browser.js",
+    "./react": "./react.jsx",
+    "./claims": "./claims.js"
+  },
+  "peerDependencies": { "react": ">=18" },
+  "peerDependenciesMeta": { "react": { "optional": true } },
+  "dependencies": { "jose": "^5.9.6" }
+}

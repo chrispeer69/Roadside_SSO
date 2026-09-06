@@ -1,0 +1,28 @@
+{
+  "name": "roadside-sso",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "migrate": "node apps/api/src/migrate.js",
+    "dev": "concurrently -n api,portal -c blue,cyan \"npm run dev:api\" \"npm run dev:portal\"",
+    "dev:api": "node --watch apps/api/src/index.js",
+    "dev:portal": "npm --prefix apps/portal run dev",
+    "build": "npm --prefix apps/portal run build",
+    "start": "node apps/api/src/index.js",
+    "db:reset": "docker exec roadside-sso-postgres psql -U roadside -d roadside_sso -q -c \"DROP SCHEMA public CASCADE; CREATE SCHEMA public;\"",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

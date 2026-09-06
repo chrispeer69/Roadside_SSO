@@ -1,0 +1,48 @@
+[
+  {
+    "id": "ustowdispatch", "name": "US Tow Dispatch", "category": "Operations", "icon": "truck",
+    "description": "Call board, driver assignment, ETAs and job status.",
+    "base_url": "https://www.ustowdispatch.com", "launch_url": "https://www.ustowdispatch.com",
+    "redirect_uris": ["https://www.ustowdispatch.com/auth/callback"], "post_logout_uris": ["https://www.ustowdispatch.com/"],
+    "owner": "internal", "sort": 10
+  },
+  {
+    "id": "ustowaiconnect", "name": "US Tow AI Connect", "category": "Communications", "icon": "message-chatbot",
+    "description": "AI phone and message handling for calls and customers.",
+    "base_url": "https://www.ustowaiconnect.com", "launch_url": "https://www.ustowaiconnect.com",
+    "redirect_uris": ["https://www.ustowaiconnect.com/auth/callback"], "post_logout_uris": ["https://www.ustowaiconnect.com/"],
+    "owner": "internal", "sort": 20
+  },
+  {
+    "id": "ustowalliance", "name": "US Tow Alliance", "category": "Network", "icon": "building-community",
+    "description": "Alliance member portal, partners and referrals.",
+    "base_url": "https://www.ustowalliance.com", "launch_url": "https://www.ustowalliance.com",
+    "redirect_uris": ["https://www.ustowalliance.com/auth/callback"], "post_logout_uris": ["https://www.ustowalliance.com/"],
+    "owner": "internal", "sort": 30
+  },
+  {
+    "id": "ustowstats", "name": "US Tow Stats", "category": "Reporting", "icon": "chart-bar",
+    "description": "Revenue, response times and driver performance.",
+    "base_url": "https://www.ustowstats.com", "launch_url": "https://www.ustowstats.com",
+    "redirect_uris": ["https://www.ustowstats.com/auth/callback"], "post_logout_uris": ["https://www.ustowstats.com/"],
+    "owner": "internal", "sort": 40
+  },
+  {
+    "id": "towbook", "name": "Towbook", "category": "Operations", "icon": "clipboard-list",
+    "description": "Towbook dispatch and impound management.",
+    "base_url": "https://app.towbook.com", "launch_url": "https://app.towbook.com",
+    "owner": "partner", "sort": 50
+  },
+  {
+    "id": "gmail", "name": "Gmail", "category": "Email", "icon": "mail",
+    "description": "Company mail. Opens the account matching your sign-in email; set a tile override for a shared inbox.",
+    "base_url": "https://mail.google.com", "launch_url": "https://mail.google.com/mail/u/?authuser={email}",
+    "owner": "partner", "sort": 60
+  },
+  {
+    "id": "gohighlevel", "name": "GoHighLevel", "category": "Marketing", "icon": "users-group",
+    "description": "CRM, pipelines, campaigns and reviews.",
+    "base_url": "https://app.gohighlevel.com", "launch_url": "https://app.gohighlevel.com/",
+    "owner": "partner", "sort": 70
+  }
+]
