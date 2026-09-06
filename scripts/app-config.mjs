@@ -20,8 +20,24 @@ if (!url) { console.error("DATABASE_URL is not set"); process.exit(1); }
 const pool = new pg.Pool({ connectionString: url, ssl: /localhost|127\.0\.0\.1|\.internal/.test(url) ? undefined : { rejectUnauthorized: false } });
 const list = (s) => s.split(",").map((x) => x.trim()).filter(Boolean);
 
-const app = (await pool.query(`SELECT * FROM apps WHERE id = $1`, [appId])).rows[0];
-if (!app) { console.error(`app "${appId}" not found`); process.exit(1); }
+let app = (await pool.query(`SELECT * FROM apps WHERE id = $1`, [appId])).rows[0];
+if (!app && opts.create) {
+  // --create --name "..." [--category ..] [--icon ..] [--description ..] [--base <url>] [--owner internal|partner] [--sort n]
+  app = (await pool.query(
+    `INSERT INTO apps (id, name, category, description, icon, base_url, launch_url, owner, sort) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+    [appId, opts.name || appId, opts.category || "General", opts.description || "", opts.icon || "apps", opts.base || "", opts.launch || opts.base || "", opts.owner === "partner" ? "partner" : "internal", Number(opts.sort) || 100]
+  )).rows[0];
+  if (opts.tenants !== "none") {
+    // Put the new tile on every existing organization's dashboard (visible to everyone; admins can restrict later).
+    await pool.query(`INSERT INTO tenant_apps (tenant_id, app_id, sort) SELECT id, $1, $2 FROM tenants ON CONFLICT DO NOTHING`, [appId, Number(opts.sort) || 100]);
+  }
+  console.log(`created app ${appId}`);
+}
+if (!app) { console.error(`app "${appId}" not found (use --create)`); process.exit(1); }
+if (opts.name || opts.category || opts.icon || opts.description || opts.base) {
+  await pool.query(`UPDATE apps SET name = COALESCE($2, name), category = COALESCE($3, category), icon = COALESCE($4, icon), description = COALESCE($5, description), base_url = COALESCE($6, base_url) WHERE id = $1`,
+    [appId, opts.name || null, opts.category || null, opts.icon || null, opts.description || null, opts.base || null]);
+}
 
 const sets = [], vals = [appId];
 const set = (col, v) => { vals.push(v); sets.push(`${col} = $${vals.length}`); };
