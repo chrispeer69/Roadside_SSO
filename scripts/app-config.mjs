@@ -13,8 +13,10 @@ const opts = {};
 for (let i = 0; i < rest.length; i++) {
   const k = rest[i];
   if (k === "--new-secret") opts.newSecret = true;
+  else if (k === "--b64") Object.assign(opts, JSON.parse(Buffer.from(rest[++i], "base64url").toString("utf8")));   // shell-safe: {"name":"US Tow Crew",...}
   else if (k.startsWith("--")) opts[k.slice(2)] = rest[++i];
 }
+if (opts["new-secret"] || opts.newSecret === true) opts.newSecret = true;
 const url = process.env.DATABASE_URL;
 if (!url) { console.error("DATABASE_URL is not set"); process.exit(1); }
 const pool = new pg.Pool({ connectionString: url, ssl: /localhost|127\.0\.0\.1|\.internal/.test(url) ? undefined : { rejectUnauthorized: false } });
