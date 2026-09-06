@@ -92,6 +92,21 @@ app.get("/dispatch", auth.requireAuth, auth.requireRole("dispatcher", "manager",
 Outside sites that do not support SSO (Towbook, Gmail, GoHighLevel) are **link tiles**. Launch addresses accept
 `{email}` and `{org}` placeholders; a tenant can also override the launch address per tile (e.g. a shared Gmail inbox).
 
+## Mail (unified inbox)
+
+The **Mail** page shows every connected mailbox in one inbox: personal mailboxes (only the person who added them) and
+shared team inboxes (added by a tenant admin, visible to chosen roles). Works with Gmail, Google Workspace, Microsoft 365
+and any IMAP/SMTP server; no Google app verification is needed because it uses **app passwords**.
+
+* Connect: Mail → Add mailbox → name, address, provider, app password. For Google: account → Security →
+  2-Step Verification → App passwords → create one for "Roadside"; IMAP must be enabled in Gmail settings.
+* Read, search, star, mark unread, archive, trash, restore; attachments open or download; inline images render.
+* Compose, reply, reply all, forward, with attachments (25 MB per message) and a per-mailbox signature. Replies keep
+  the thread (In-Reply-To / References). Sent copies are filed in the mailbox's Sent folder.
+* Headers are cached in Postgres (`mail_messages`) and refreshed every `MAIL_SYNC_SECONDS` (default 180) plus on demand;
+  bodies are fetched live from the server. Passwords are encrypted with `MAIL_ENCRYPTION_KEY` (AES-256-GCM).
+* The dashboard shows unread counts per mailbox and the latest unread messages.
+
 ## Token claims
 
 `sub email email_verified name phone_number org_id org_slug org_name roles[] locations[] apps[] title platform_admin sid`

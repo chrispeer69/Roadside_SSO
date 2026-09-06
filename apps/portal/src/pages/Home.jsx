@@ -9,7 +9,14 @@ const greeting = () => { const h = new Date().getHours(); return h < 12 ? "Good 
 export default function Home() {
   const { me } = useMe();
   const [activity, setActivity] = useState([]);
-  useEffect(() => { get("/api/me/activity").then(setActivity).catch(() => {}); }, []);
+  const [mailSummary, setMailSummary] = useState(null);
+  useEffect(() => {
+    get("/api/me/activity").then(setActivity).catch(() => {});
+    const loadMail = () => get("/api/mail/summary").then(setMailSummary).catch(() => {});
+    loadMail();
+    const t = setInterval(loadMail, 90e3);
+    return () => clearInterval(t);
+  }, []);
   const isAdmin = !!me.membership?.isAdmin || me.user.isPlatformAdmin;
   const pinned = me.apps.filter((a) => a.pinned);
   const rest = me.apps.filter((a) => !a.pinned);
@@ -46,11 +53,27 @@ export default function Home() {
       )}
 
       <section className="section cols">
-        <Panel title="Recent activity" actions={<Badge tone="neutral">Your account</Badge>}>
+        <div className="stack">
+          <Panel title="Mail" actions={mailSummary ? <Link to="/mail" className="tiny">{mailSummary.unread > 0 ? `${mailSummary.unread} unread · open` : "Open mail"}</Link> : null}>
+            {!mailSummary ? <div className="row faint">Loading…</div> : !mailSummary.accounts.length ? (
+              <div className="row"><span className="muted">Connect your mailboxes to see every inbox here.</span><Link to="/mail" className="btn sm" style={{ marginLeft: "auto" }}>Set up mail</Link></div>
+            ) : (
+              <>
+                <div className="row wrap" style={{ gap: 6 }}>
+                  {mailSummary.accounts.map((a) => <Link key={a.id} to="/mail" className={`chip ${a.unread ? "on" : ""}`} title={a.email}>{a.displayName}{a.unread ? ` · ${a.unread}` : ""}{a.status === "error" ? " · !" : ""}</Link>)}
+                </div>
+                {mailSummary.latest.length ? mailSummary.latest.map((m) => (
+                  <Link className="row" key={m.id} to="/mail"><span className="src" style={{ minWidth: 0, maxWidth: 110, overflow: "hidden", textOverflow: "ellipsis" }}>{m.account_name}</span><span className="grow" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}><b>{m.from_name || m.from_addr}</b> · {m.subject || "(no subject)"}</span><span className="t">{timeAgo(m.date)}</span></Link>
+                )) : <div className="row faint">No unread mail.</div>}
+              </>
+            )}
+          </Panel>
+          <Panel title="Recent activity" actions={<Badge tone="neutral">Your account</Badge>}>
           {activity.length ? activity.slice(0, 10).map((a, i) => (
             <div className="row" key={i}><span className="src">{a.event.split(".")[0]}</span><span>{eventLabel(a.event)}{a.target ? ` · ${a.target}` : ""}</span><span className="t">{timeAgo(a.at)}</span></div>
           )) : <div className="row faint">No activity yet.</div>}
-        </Panel>
+          </Panel>
+        </div>
         <div className="stack">
           <Panel title="Your access" pad>
             <div className="stack" style={{ gap: 8 }}>

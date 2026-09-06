@@ -9,6 +9,7 @@ import People from "./pages/People.jsx";
 import Security from "./pages/Security.jsx";
 import Account from "./pages/Account.jsx";
 import Platform from "./pages/Platform.jsx";
+import Mail from "./pages/Mail.jsx";
 
 const MeCtx = createContext(null);
 export const useMe = () => useContext(MeCtx);
@@ -16,6 +17,7 @@ export const useMe = () => useContext(MeCtx);
 const PAGES = {
   "/": { el: Home, label: "Dashboard", icon: "layout-grid" },
   "/apps": { el: Apps, label: "Apps", icon: "apps" },
+  "/mail": { el: Mail, label: "Mail", icon: "mail", wide: true },
   "/people": { el: People, label: "People", icon: "users", admin: true },
   "/security": { el: Security, label: "Security", icon: "shield-check", admin: true },
   "/account": { el: Account, label: "Account", icon: "user-circle" },
@@ -118,7 +120,7 @@ function Shell({ path }) {
             )}
           </div>
         </header>
-        <main className="page"><Page /></main>
+        <main className={`page ${page.wide ? "page-wide" : ""}`}><Page /></main>
       </div>
     </div>
   );

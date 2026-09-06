@@ -18,6 +18,8 @@ import { tenant } from "./routes/tenant.js";
 import { platform } from "./routes/platform.js";
 import { oidc } from "./routes/oidc.js";
 import { launch } from "./routes/launch.js";
+import { mail } from "./routes/mail.js";
+import { startMailScheduler } from "./lib/mail.js";
 
 const app = express();
 app.set("trust proxy", 1);
@@ -41,6 +43,7 @@ app.use("/api/auth", auth);
 app.use("/api/me", me);
 app.use("/api/tenant", tenant);
 app.use("/api/platform", platform);
+app.use("/api/mail", mail);
 app.use(oidc);
 app.use(launch);
 app.all("/api/*", (req, res) => res.status(404).json({ error: "not_found" }));
@@ -72,6 +75,7 @@ async function main() {
     pool.query(`DELETE FROM sessions WHERE expires_at < now() - interval '30 days' OR revoked_at < now() - interval '30 days'`).catch(() => {});
     pool.query(`DELETE FROM password_resets WHERE expires_at < now() - interval '7 days'`).catch(() => {});
   }, 3600e3).unref();
+  startMailScheduler();
   app.listen(config.port, () => console.log(`[roadside-sso] ${config.env} on :${config.port}  issuer=${config.publicUrl}`));
 }
 main().catch((e) => { console.error("[fatal]", e); process.exit(1); });
