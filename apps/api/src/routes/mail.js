@@ -46,7 +46,7 @@ mail.get("/accounts", wrap(async (req, res) => {
 }));
 
 function accountInput(body, existing) {
-  const provider = ["gmail", "outlook", "imap"].includes(body.provider) ? body.provider : existing?.provider ?? "gmail";
+  const provider = ["gmail", "outlook", "yahoo", "imap"].includes(body.provider) ? body.provider : existing?.provider ?? "gmail";
   const preset = PRESETS[provider] ?? {};
   const v = {
     display_name: String(body.displayName ?? existing?.display_name ?? "").trim().slice(0, 80),

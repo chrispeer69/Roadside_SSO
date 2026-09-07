@@ -9,6 +9,7 @@ import { decryptSecret } from "./mailcrypto.js";
 export const PRESETS = {
   gmail: { imap_host: "imap.gmail.com", imap_port: 993, imap_secure: true, smtp_host: "smtp.gmail.com", smtp_port: 465, smtp_secure: true },
   outlook: { imap_host: "outlook.office365.com", imap_port: 993, imap_secure: true, smtp_host: "smtp.office365.com", smtp_port: 587, smtp_secure: false },
+  yahoo: { imap_host: "imap.mail.yahoo.com", imap_port: 993, imap_secure: true, smtp_host: "smtp.mail.yahoo.com", smtp_port: 465, smtp_secure: true },
 };
 const INITIAL_PER_FOLDER = 150;   // first sync depth
 const FLAG_REFRESH_DEPTH = 300;   // cached rows re-checked for read/star/removal on each sync

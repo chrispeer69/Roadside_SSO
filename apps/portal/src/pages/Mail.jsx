@@ -301,9 +301,9 @@ function AccountForm({ account, isAdmin, onClose, onDone }) {
       <div className="grid3">
         <Field label="Name" hint="How it appears in the list"><input value={f.displayName} onChange={set("displayName")} placeholder="Dispatch inbox" autoFocus /></Field>
         <Field label="Email address"><input type="email" value={f.email} onChange={set("email")} placeholder="dispatch@ustowalliance.com" /></Field>
-        <Field label="Provider"><select value={f.provider} onChange={set("provider")}><option value="gmail">Gmail / Google Workspace</option><option value="outlook">Outlook / Microsoft 365</option><option value="imap">Other (IMAP)</option></select></Field>
+        <Field label="Provider"><select value={f.provider} onChange={set("provider")}><option value="gmail">Gmail / Google Workspace</option><option value="yahoo">Yahoo Mail</option><option value="outlook">Outlook / Microsoft 365</option><option value="imap">Other (IMAP)</option></select></Field>
       </div>
-      <Field label={editing ? "New app password (leave blank to keep)" : "App password"} hint={gmailish ? <>Not your normal password. In the Google account: Security → 2-Step Verification → App passwords → create one for "Roadside". Paste the 16 characters here.</> : "Use an app password if your provider offers one."}>
+      <Field label={editing ? "New app password (leave blank to keep)" : "App password"} hint={gmailish ? <>Not your normal password. In the Google account: Security → 2-Step Verification → App passwords → create one for "Roadside". Paste the 16 characters here.</> : f.provider === "yahoo" ? <>Not your normal password. Yahoo: Account Info → Security → Generate app password → name it "Roadside". Paste it here.</> : "Use an app password if your provider offers one."}>
         <input type="password" value={f.password} onChange={set("password")} autoComplete="new-password" placeholder={editing ? "••••••••••••••••" : "xxxx xxxx xxxx xxxx"} />
       </Field>
       {f.provider === "imap" && (
