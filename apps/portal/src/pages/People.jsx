@@ -11,6 +11,7 @@ export default function People() {
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState(null);
   const [secret, setSecret] = useState(null); // { title, label, value, note }
+  const [pwFor, setPwFor] = useState(null);
   const toast = useToast();
   const confirm = useConfirm();
 
@@ -28,6 +29,8 @@ export default function People() {
         if (!(await confirm({ title: `Issue a temporary password for ${p.name}?`, text: "Their current password stops working and every device is signed out. Give them the new password in person or by text.", label: "Issue password" }))) return;
         const r = await post(`/api/tenant/people/${p.id}/temp-password`);
         setSecret({ title: "Temporary password", label: `${p.name} · one-time`, value: r.tempPassword, note: "They will be asked to choose a new password at sign-in." });
+      } else if (kind === "setpw") {
+        setPwFor(p); return;
       } else if (kind === "link") {
         const r = await post(`/api/tenant/people/${p.id}/reset-link`);
         setSecret({ title: "Password reset link", label: `${p.name} · valid 24 hours`, value: r.url, note: "Send this link by text or email. It works once." });
@@ -88,6 +91,7 @@ export default function People() {
 
       {adding && <PersonForm roles={info?.roles ?? []} onClose={() => setAdding(false)} onDone={async (r) => { setAdding(false); await load(); if (r.tempPassword) setSecret({ title: "Temporary password", label: `${r.email} · one-time`, value: r.tempPassword, note: "Give this to them in person or by text. They will set their own password at first sign-in." }); else toast("Added existing sign-in to this organization"); }} />}
       {editing && <PersonForm person={editing} roles={info?.roles ?? []} apps={me.apps} onClose={() => setEditing(null)} onDone={async () => { setEditing(null); await load(); toast("Saved"); }} />}
+      {pwFor && <SetPasswordModal person={pwFor} onClose={() => setPwFor(null)} onDone={() => { setPwFor(null); toast(`Password set for ${pwFor.name}`); load(); }} />}
       {secret && (
         <Modal title={secret.title} onClose={() => setSecret(null)} footer={<Btn variant="key" onClick={() => setSecret(null)}>Done</Btn>}>
           <CopyBox label={secret.label} value={secret.value} />
@@ -108,6 +112,7 @@ function RowMenu({ p, self, onEdit, onAct }) {
       </div>
       {open && (
         <div className="menu" role="menu" onMouseLeave={() => setOpen(false)}>
+          <button onClick={() => { setOpen(false); onAct("setpw"); }}><Icon name="password" />Set password</button>
           <button onClick={() => { setOpen(false); onAct("temp"); }}><Icon name="key" />Temporary password</button>
           <button onClick={() => { setOpen(false); onAct("link"); }}><Icon name="link" />Password reset link</button>
           <button onClick={() => { setOpen(false); onAct("mfa"); }} disabled={!p.mfa_enabled}><Icon name="shield-off" />Reset two-step</button>
@@ -165,6 +170,31 @@ function PersonForm({ person, roles, apps = [], onClose, onDone }) {
         )}
         <button type="submit" hidden />
       </form>
+    </Modal>
+  );
+}
+
+function SetPasswordModal({ person, onClose, onDone }) {
+  const [pw, setPw] = useState("");
+  const [pw2, setPw2] = useState("");
+  const [mustChange, setMustChange] = useState(false);
+  const [err, setErr] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const save = async () => {
+    setErr(null);
+    if (pw !== pw2) return setErr("The passwords do not match.");
+    setBusy(true);
+    try { await post(`/api/tenant/people/${person.id}/password`, { password: pw, mustChange }); onDone(); } catch (e) { setErr(e.message); setBusy(false); }
+  };
+  return (
+    <Modal title={`Set password for ${person.name}`} onClose={onClose} footer={<><Btn variant="quiet" onClick={onClose}>Cancel</Btn><Btn variant="key" onClick={save} disabled={busy || pw.length < 10}>Set password</Btn></>}>
+      <ErrorBox error={err} />
+      <p className="small muted">At least 10 characters with letters and numbers. Their other devices are signed out when it changes.</p>
+      <div className="grid2">
+        <Field label="New password"><input type="password" autoComplete="new-password" value={pw} onChange={(e) => setPw(e.target.value)} autoFocus /></Field>
+        <Field label="Confirm"><input type="password" autoComplete="new-password" value={pw2} onChange={(e) => setPw2(e.target.value)} /></Field>
+      </div>
+      <label className="check"><input type="checkbox" checked={mustChange} onChange={(e) => setMustChange(e.target.checked)} />Ask them to choose their own password at next sign-in</label>
     </Modal>
   );
 }

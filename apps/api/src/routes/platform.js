@@ -3,7 +3,7 @@ import { Router } from "express";
 import { one, query, rows } from "../db.js";
 import { hashPassword, randomToken, slugify } from "../lib/crypto.js";
 import { audit, clientIp } from "../lib/audit.js";
-import { addPerson, upsertTenantApp, removeTenantApp, peopleOf, cleanSettings, updatePerson, removePerson, issueTempPassword, issueResetLink, resetMfa } from "../lib/service.js";
+import { addPerson, upsertTenantApp, removeTenantApp, peopleOf, cleanSettings, updatePerson, removePerson, issueTempPassword, issueResetLink, resetMfa, setPassword } from "../lib/service.js";
 import { tenantApps, tileOf } from "../lib/access.js";
 import { endAllSessionsForUser } from "../lib/logout.js";
 import { requireUser, requirePlatformAdmin, wrap, bad, notFound } from "../middleware/guards.js";
@@ -88,6 +88,7 @@ platform.post("/tenants/:id/people", wrap(async (req, res) => {
 platform.patch("/tenants/:id/people/:userId", wrap(async (req, res) => { await updatePerson(await loadTenant(req), req.params.userId, req.body, req.auth.user, clientIp(req)); res.json({ ok: true }); }));
 platform.delete("/tenants/:id/people/:userId", wrap(async (req, res) => { await removePerson(await loadTenant(req), req.params.userId, req.auth.user, clientIp(req)); res.json({ ok: true }); }));
 platform.post("/tenants/:id/people/:userId/temp-password", wrap(async (req, res) => { const t = await loadTenant(req); res.json({ tempPassword: await issueTempPassword(req.params.userId, req.auth.user, t.id, clientIp(req)) }); }));
+platform.post("/tenants/:id/people/:userId/password", wrap(async (req, res) => { const t = await loadTenant(req); await setPassword(req.params.userId, String(req.body.password ?? ""), !!req.body.mustChange, req.auth.user, t.id, clientIp(req)); res.json({ ok: true }); }));
 platform.post("/tenants/:id/people/:userId/reset-link", wrap(async (req, res) => { const t = await loadTenant(req); res.json({ url: await issueResetLink(req.params.userId, req.auth.user, t.id, clientIp(req)) }); }));
 platform.post("/tenants/:id/people/:userId/mfa-reset", wrap(async (req, res) => { const t = await loadTenant(req); await resetMfa(req.params.userId, req.auth.user, t.id, clientIp(req)); res.json({ ok: true }); }));
 

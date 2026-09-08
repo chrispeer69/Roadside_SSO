@@ -4,7 +4,7 @@ import { one, query, rows } from "../db.js";
 import { tenantApps, tileOf } from "../lib/access.js";
 import { audit, clientIp } from "../lib/audit.js";
 import { endSession } from "../lib/logout.js";
-import { addPerson, updatePerson, removePerson, issueTempPassword, issueResetLink, resetMfa, upsertTenantApp, removeTenantApp, peopleOf, cleanSettings, tenantRoles } from "../lib/service.js";
+import { addPerson, updatePerson, removePerson, issueTempPassword, issueResetLink, setPassword, resetMfa, upsertTenantApp, removeTenantApp, peopleOf, cleanSettings, tenantRoles } from "../lib/service.js";
 import { requireUser, requireTenantAdmin, wrap, bad, notFound } from "../middleware/guards.js";
 
 export const tenant = Router();
@@ -58,6 +58,7 @@ const memberOnly = async (req) => {
   if (!m) throw notFound("Person not found in this organization.");
 };
 tenant.post("/people/:userId/temp-password", wrap(async (req, res) => { await memberOnly(req); res.json({ tempPassword: await issueTempPassword(req.params.userId, req.auth.user, req.auth.tenant.id, clientIp(req)) }); }));
+tenant.post("/people/:userId/password", wrap(async (req, res) => { await memberOnly(req); await setPassword(req.params.userId, String(req.body.password ?? ""), !!req.body.mustChange, req.auth.user, req.auth.tenant.id, clientIp(req)); res.json({ ok: true }); }));
 tenant.post("/people/:userId/reset-link", wrap(async (req, res) => { await memberOnly(req); res.json({ url: await issueResetLink(req.params.userId, req.auth.user, req.auth.tenant.id, clientIp(req)) }); }));
 tenant.post("/people/:userId/mfa-reset", wrap(async (req, res) => { await memberOnly(req); await resetMfa(req.params.userId, req.auth.user, req.auth.tenant.id, clientIp(req)); res.json({ ok: true }); }));
 

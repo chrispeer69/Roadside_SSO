@@ -140,7 +140,7 @@ export const uaShort = (ua = "") => {
 export const EVENT_LABEL = {
   "login.success": "Signed in", "login.failed": "Failed sign-in", logout: "Signed out", "mfa.passed": "Verified code", "mfa.failed": "Wrong code",
   "mfa.enabled": "Two-step enabled", "mfa.disabled": "Two-step disabled", "mfa.reset": "Two-step reset", "app.launched": "Opened app", "app.denied": "App access denied",
-  "password.changed": "Password changed", "password.reset": "Password reset", "password.temp_issued": "Temporary password issued", "password.reset_link": "Reset link created",
+  "password.changed": "Password changed", "password.reset": "Password reset", "password.temp_issued": "Temporary password issued", "password.set_by_admin": "Password set by administrator", "password.reset_link": "Reset link created",
   "person.created": "Person added", "person.attached": "Person added", "person.updated": "Person updated", "person.removed": "Person removed", "person.email_changed": "Email changed",
   "app.connected": "App connected", "app.updated": "App settings changed", "app.disconnected": "App disconnected", "tenant.updated": "Organization settings changed",
   "tenant.created": "Organization created", "tenant.switched": "Switched organization", "session.revoked": "Session ended", "user.updated": "User updated",

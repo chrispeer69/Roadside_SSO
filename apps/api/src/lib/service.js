@@ -1,6 +1,6 @@
 // Shared operations used by both tenant-admin and platform-admin routes.
 import { one, query, rows } from "../db.js";
-import { hashPassword, tempPassword, randomToken, sha256 } from "./crypto.js";
+import { hashPassword, tempPassword, randomToken, sha256, passwordProblem } from "./crypto.js";
 import { ROLES } from "./access.js";
 import { audit } from "./audit.js";
 import { bad, notFound } from "../middleware/guards.js";
@@ -107,6 +107,15 @@ export async function issueTempPassword(userId, actor, tenantId, ip) {
   await endAllSessionsForUser(userId);
   audit({ tenantId, userId, actorId: actor.id, event: "password.temp_issued", ip });
   return temp;
+}
+
+// Administrator sets a specific password (optionally forcing a change at next sign-in). Signs the person out everywhere.
+export async function setPassword(userId, password, mustChange, actor, tenantId, ip) {
+  const problem = passwordProblem(password);
+  if (problem) throw bad(problem, "weak_password");
+  await query(`UPDATE users SET password_hash = $2, must_change_password = $3, failed_logins = 0, locked_until = NULL WHERE id = $1`, [userId, await hashPassword(password), !!mustChange]);
+  await endAllSessionsForUser(userId);
+  audit({ tenantId, userId, actorId: actor.id, event: "password.set_by_admin", detail: { mustChange: !!mustChange }, ip });
 }
 
 export async function issueResetLink(userId, actor, tenantId, ip) {
