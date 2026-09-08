@@ -130,7 +130,7 @@ function PersonForm({ person, roles, apps = [], onClose, onDone }) {
   const submit = async (e) => {
     e.preventDefault(); setBusy(true); setErr(null);
     try {
-      if (editing) { await patch(`/api/tenant/people/${person.id}`, { name: f.name, phone: f.phone, title: f.title, roles: f.roles, locations: f.locations, appOverrides: f.appOverrides }); onDone({}); }
+      if (editing) { await patch(`/api/tenant/people/${person.id}`, { name: f.name, email: f.email, phone: f.phone, title: f.title, roles: f.roles, locations: f.locations, appOverrides: f.appOverrides }); onDone({}); }
       else { const r = await post("/api/tenant/people", f); onDone(r); }
     } catch (e2) { setErr(e2.message); setBusy(false); }
   };
@@ -142,7 +142,7 @@ function PersonForm({ person, roles, apps = [], onClose, onDone }) {
         <ErrorBox error={err} />
         <div className="grid2">
           <Field label="Full name"><input required value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></Field>
-          <Field label="Work email" hint={editing ? "Email cannot be changed here." : "If this email already has a Roadside sign-in, it is added to this organization with the same password."}><input type="email" required disabled={editing} value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></Field>
+          <Field label="Work email" hint={editing ? "This is their sign-in. Changing it applies everywhere immediately." : "If this email already has a Roadside sign-in, it is added to this organization with the same password."}><input type="email" required value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></Field>
         </div>
         <div className="grid2">
           <Field label="Mobile phone"><input value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} placeholder="optional" /></Field>

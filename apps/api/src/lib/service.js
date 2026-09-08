@@ -67,6 +67,19 @@ export async function updatePerson(tenant, userId, body, actor, ip) {
   if (body.name || body.phone !== undefined) {
     await query(`UPDATE users SET name = COALESCE($2, name), phone = $3 WHERE id = $1`, [userId, body.name ? String(body.name).trim() : null, body.phone !== undefined ? (body.phone ? String(body.phone).trim() : null) : m.phone]);
   }
+  // Email is the sign-in identity; changing it takes effect everywhere at once.
+  if (body.email !== undefined) {
+    const email = String(body.email).trim().toLowerCase();
+    if (!isEmail(email)) throw bad("A valid email is required.");
+    const current = await one(`SELECT email FROM users WHERE id = $1`, [userId]);
+    if (current && current.email.toLowerCase() !== email) {
+      const domains = tenant.settings?.allowedEmailDomains ?? [];
+      if (domains.length && !domains.includes(email.split("@")[1])) throw bad(`Email must be on: ${domains.join(", ")}`);
+      if (await one(`SELECT 1 FROM users WHERE email = $1 AND id <> $2`, [email, userId])) throw bad("Another person already uses that email.", "exists");
+      await query(`UPDATE users SET email = $2 WHERE id = $1`, [userId, email]);
+      audit({ tenantId: tenant.id, userId, actorId: actor.id, event: "person.email_changed", target: email, detail: { from: current.email }, ip });
+    }
+  }
   if (status === "disabled" && m.status !== "disabled") {
     await query(`UPDATE sessions SET revoked_at = now() WHERE user_id = $1 AND tenant_id = $2 AND revoked_at IS NULL`, [userId, tenant.id]);
   }
