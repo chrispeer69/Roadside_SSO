@@ -13,10 +13,16 @@ export function tempPassword() {
   return `${w()}-${randomInt(1000, 9999)}-${w()}`;
 }
 
-export function passwordProblem(p) {
+export function passwordProblem(p, { pin = false } = {}) {
+  if (pin) {
+    if (typeof p !== "string" || !/^\d{4}$/.test(p)) return "PIN must be exactly 4 digits.";
+    if (/^(\d)\1{3}$/.test(p) || ["1234", "4321", "0000", "1111", "2580"].includes(p)) return "Choose a less obvious PIN.";
+    return null;
+  }
   if (typeof p !== "string" || p.length < 10) return "Password must be at least 10 characters.";
   if (!/[A-Za-z]/.test(p) || !/[0-9]/.test(p)) return "Password must include letters and numbers.";
   return null;
 }
+export const tempPin = () => String(randomInt(1000, 9999));
 
 export const slugify = (s) => String(s).toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);

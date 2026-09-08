@@ -1,6 +1,6 @@
 // Shared operations used by both tenant-admin and platform-admin routes.
 import { one, query, rows } from "../db.js";
-import { hashPassword, tempPassword, randomToken, sha256, passwordProblem } from "./crypto.js";
+import { hashPassword, tempPassword, tempPin, randomToken, sha256, passwordProblem } from "./crypto.js";
 import { ROLES } from "./access.js";
 import { audit } from "./audit.js";
 import { bad, notFound } from "../middleware/guards.js";
@@ -30,7 +30,7 @@ export async function addPerson(tenant, body, actor, ip) {
   let temp = null;
   if (!user) {
     if (!name) throw bad("Name is required for a new person.");
-    temp = tempPassword();
+    temp = pinMode(tenant) ? tempPin() : tempPassword();
     user = await one(
       `INSERT INTO users (email, name, phone, password_hash, must_change_password) VALUES ($1,$2,$3,$4,true) RETURNING *`,
       [email, name, body.phone ? String(body.phone).trim() : null, await hashPassword(temp)]
@@ -102,7 +102,8 @@ async function assertNotLastOwner(tenantId, userId) {
 }
 
 export async function issueTempPassword(userId, actor, tenantId, ip) {
-  const temp = tempPassword();
+  const t = await one(`SELECT settings FROM tenants WHERE id = $1`, [tenantId]);
+  const temp = pinMode(t) ? tempPin() : tempPassword();
   await query(`UPDATE users SET password_hash = $2, must_change_password = true, failed_logins = 0, locked_until = NULL WHERE id = $1`, [userId, await hashPassword(temp)]);
   await endAllSessionsForUser(userId);
   audit({ tenantId, userId, actorId: actor.id, event: "password.temp_issued", ip });
@@ -111,7 +112,8 @@ export async function issueTempPassword(userId, actor, tenantId, ip) {
 
 // Administrator sets a specific password (optionally forcing a change at next sign-in). Signs the person out everywhere.
 export async function setPassword(userId, password, mustChange, actor, tenantId, ip) {
-  const problem = passwordProblem(password);
+  const t = await one(`SELECT settings FROM tenants WHERE id = $1`, [tenantId]);
+  const problem = passwordProblem(password, { pin: pinMode(t) });
   if (problem) throw bad(problem, "weak_password");
   await query(`UPDATE users SET password_hash = $2, must_change_password = $3, failed_logins = 0, locked_until = NULL WHERE id = $1`, [userId, await hashPassword(password), !!mustChange]);
   await endAllSessionsForUser(userId);
@@ -171,13 +173,15 @@ export const peopleOf = (tenantId) =>
     [tenantId]
   );
 
-export const SETTING_KEYS = ["mfaRequiredRoles", "sessionHours", "quickLinks", "allowedEmailDomains", "customRoles", "welcome", "supportPhone", "supportEmail"];
+export const SETTING_KEYS = ["mfaRequiredRoles", "sessionHours", "quickLinks", "allowedEmailDomains", "customRoles", "welcome", "supportPhone", "supportEmail", "pinMode"];
+export const pinMode = (tenant) => !!tenant?.settings?.pinMode;
 export function cleanSettings(input, current = {}) {
   const out = { ...current };
   for (const k of SETTING_KEYS) {
     if (input[k] === undefined) continue;
     const v = input[k];
     if (k === "sessionHours") out[k] = Math.min(Math.max(Number(v) || 0, 0), 24 * 90);
+    else if (k === "pinMode") out[k] = !!v;
     else if (k === "quickLinks") out[k] = (Array.isArray(v) ? v : []).slice(0, 12).map((l) => ({ label: String(l.label ?? "").slice(0, 40), url: String(l.url ?? "").slice(0, 500) })).filter((l) => l.label && l.url);
     else if (["mfaRequiredRoles", "allowedEmailDomains", "customRoles"].includes(k)) out[k] = cleanList(v);
     else out[k] = String(v ?? "").slice(0, 300);

@@ -24,7 +24,7 @@ function Policy() {
   const [err, setErr] = useState(null);
   const [busy, setBusy] = useState(false);
   const toast = useToast();
-  useEffect(() => { get("/api/tenant").then((i) => { setInfo(i); setName(i.tenant.name); setS({ mfaRequiredRoles: [], sessionHours: 720, allowedEmailDomains: [], customRoles: [], quickLinks: [], welcome: "", supportPhone: "", supportEmail: "", ...i.tenant.settings }); }).catch(setErr); }, []);
+  useEffect(() => { get("/api/tenant").then((i) => { setInfo(i); setName(i.tenant.name); setS({ mfaRequiredRoles: [], sessionHours: 720, allowedEmailDomains: [], customRoles: [], quickLinks: [], welcome: "", supportPhone: "", supportEmail: "", pinMode: false, ...i.tenant.settings }); }).catch(setErr); }, []);
   if (err) return <ErrorBox error={err} />;
   if (!s) return <div className="muted">Loading…</div>;
   const save = async () => {
@@ -42,6 +42,9 @@ function Policy() {
             <Field label="Organization name"><input value={name} onChange={(e) => setName(e.target.value)} /></Field>
             <Field label="Two-step sign-in required for" hint="People with these roles must enroll an authenticator app. Others may enroll voluntarily.">
               <Picker options={info.roles} value={s.mfaRequiredRoles} onChange={(v) => setS({ ...s, mfaRequiredRoles: v })} />
+            </Field>
+            <Field label="Sign-in credential" hint="4-digit PIN is easier for drivers but far weaker than a password. With PIN on, accounts lock for 15 minutes after 5 wrong tries; keep two-step sign-in required for owners and admins.">
+              <div className="filters">{[[false, "Password (10+ characters)"], [true, "4-digit PIN"]].map(([v, l]) => <button type="button" key={String(v)} aria-pressed={!!s.pinMode === v} onClick={() => setS({ ...s, pinMode: v })}>{l}</button>)}</div>
             </Field>
             <Field label="Stay signed in for (hours)" hint="Sessions on trusted devices last this long. 720 = 30 days. Signing out ends every app at once.">
               <input type="number" min={1} max={2160} value={s.sessionHours} onChange={(e) => setS({ ...s, sessionHours: e.target.value })} />

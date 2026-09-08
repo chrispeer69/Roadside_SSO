@@ -5,6 +5,7 @@ import { verifyPassword, hashPassword, passwordProblem, sha256 } from "../lib/cr
 import { newMfaSecret, otpauthUrl, verifyMfaCode } from "../lib/mfa.js";
 import { audit, clientIp } from "../lib/audit.js";
 import { membershipsFor } from "../lib/access.js";
+import { pinMode } from "../lib/service.js";
 import { endSession, endAllSessionsForUser } from "../lib/logout.js";
 import { createSession, clearSessionCookie } from "../middleware/session.js";
 import { requireSession, wrap, bad } from "../middleware/guards.js";
@@ -32,7 +33,10 @@ auth.post("/login", loginLimiter, wrap(async (req, res) => {
   if (user.locked_until && new Date(user.locked_until) > new Date()) return res.status(423).json({ error: "locked", message: "Too many failed attempts. Try again in 15 minutes." });
   if (!(await verifyPassword(password, user.password_hash))) {
     const n = user.failed_logins + 1;
-    await query(`UPDATE users SET failed_logins = $2, locked_until = CASE WHEN $2 >= 10 THEN now() + interval '15 minutes' ELSE NULL END WHERE id = $1`, [user.id, n]);
+    // PIN organizations lock after 5 wrong tries (a 4-digit PIN needs a tighter gate than a password).
+    const pinOrg = await one(`SELECT 1 FROM memberships m JOIN tenants t ON t.id = m.tenant_id WHERE m.user_id = $1 AND (t.settings->>'pinMode') = 'true' LIMIT 1`, [user.id]);
+    const limit = pinOrg ? 5 : 10;
+    await query(`UPDATE users SET failed_logins = $2, locked_until = CASE WHEN $2 >= $3 THEN now() + interval '15 minutes' ELSE NULL END WHERE id = $1`, [user.id, n, limit]);
     audit({ userId: user.id, event: "login.failed", target: email, ip });
     return fail();
   }
@@ -73,9 +77,10 @@ auth.post("/password", requireSession, wrap(async (req, res) => {
   const { user, session } = req.auth;
   if (user.mfa_enabled && !session.mfa_passed) return res.status(401).json({ error: "mfa_required", message: "Enter your verification code first." });
   if (!(await verifyPassword(String(req.body.currentPassword ?? ""), user.password_hash))) throw bad("Current password is incorrect.", "wrong_password");
-  const problem = passwordProblem(req.body.newPassword);
+  const pin = pinMode(req.auth.tenant);
+  const problem = passwordProblem(req.body.newPassword, { pin });
   if (problem) throw bad(problem, "weak_password");
-  if (req.body.newPassword === req.body.currentPassword) throw bad("Choose a password you have not used before.", "weak_password");
+  if (req.body.newPassword === req.body.currentPassword) throw bad(pin ? "Choose a PIN you have not used before." : "Choose a password you have not used before.", "weak_password");
   await query(`UPDATE users SET password_hash = $2, must_change_password = false WHERE id = $1`, [user.id, await hashPassword(req.body.newPassword)]);
   await endAllSessionsForUser(user.id, { exceptSessionId: session.id });
   audit({ tenantId: session.tenant_id, userId: user.id, event: "password.changed", ip: clientIp(req) });
@@ -87,7 +92,8 @@ auth.post("/reset", loginLimiter, wrap(async (req, res) => {
   const token = String(req.body.token ?? "");
   const pr = token && (await one(`SELECT * FROM password_resets WHERE token_hash = $1 AND used_at IS NULL AND expires_at > now()`, [sha256(token)]));
   if (!pr) throw bad("This reset link is invalid or has expired. Ask your administrator for a new one.", "bad_token");
-  const problem = passwordProblem(req.body.newPassword);
+  const pinOrg = await one(`SELECT 1 FROM memberships m JOIN tenants t ON t.id = m.tenant_id WHERE m.user_id = $1 AND (t.settings->>'pinMode') = 'true' LIMIT 1`, [pr.user_id]);
+  const problem = passwordProblem(req.body.newPassword, { pin: !!pinOrg });
   if (problem) throw bad(problem, "weak_password");
   await query(`UPDATE users SET password_hash = $2, must_change_password = false, failed_logins = 0, locked_until = NULL WHERE id = $1`, [pr.user_id, await hashPassword(req.body.newPassword)]);
   await query(`UPDATE password_resets SET used_at = now() WHERE token_hash = $1`, [pr.token_hash]);

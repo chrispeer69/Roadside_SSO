@@ -32,7 +32,7 @@ me.get("/", requireSession, wrap(async (req, res) => {
   const s = tenant?.settings ?? {};
   res.json({
     ...base,
-    tenant: tenant ? { id: tenant.id, slug: tenant.slug, name: tenant.name, quickLinks: s.quickLinks ?? [], welcome: s.welcome ?? "", supportPhone: s.supportPhone ?? "", supportEmail: s.supportEmail ?? "", mfaRequiredRoles: s.mfaRequiredRoles ?? [] } : null,
+    tenant: tenant ? { id: tenant.id, slug: tenant.slug, name: tenant.name, quickLinks: s.quickLinks ?? [], welcome: s.welcome ?? "", supportPhone: s.supportPhone ?? "", supportEmail: s.supportEmail ?? "", mfaRequiredRoles: s.mfaRequiredRoles ?? [], pinMode: !!s.pinMode } : null,
     membership: membership ? { roles: membership.roles, locations: membership.locations, title: membership.title, isAdmin: isTenantAdmin(user, membership) } : null,
     tenants: memberships.map((m) => ({ id: m.tenant_id, slug: m.tenant_slug, name: m.tenant_name, roles: m.roles })),
     apps,

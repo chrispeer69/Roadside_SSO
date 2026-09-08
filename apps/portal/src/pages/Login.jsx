@@ -45,7 +45,7 @@ function SignIn({ hint, onDone }) {
       <p className="sub">Use your work email and password.</p>
       <ErrorBox error={err} />
       <Field label="Email"><input type="email" autoComplete="username" required autoFocus value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" /></Field>
-      <Field label="Password"><input type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} /></Field>
+      <Field label="Password or PIN"><input type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} /></Field>
       <Btn variant="key" type="submit" className="block" disabled={busy}>{busy ? "Signing in…" : "Sign in"}</Btn>
       <div className="foot">Forgot your password? Ask your administrator for a reset link or a temporary password.</div>
     </form>
@@ -89,10 +89,10 @@ function ChangePassword({ user, onDone, onLogout }) {
   return (
     <form className="card" onSubmit={submit}>
       <h2>Set your password</h2>
-      <p className="sub">Welcome, {user.name}. Replace the temporary password before continuing. At least 10 characters with letters and numbers.</p>
+      <p className="sub">Welcome, {user.name}. Replace the temporary password or PIN before continuing. Passwords need 10+ characters with letters and numbers; PINs are exactly 4 digits.</p>
       <ErrorBox error={err} />
-      <Field label="Temporary password"><input type="password" autoComplete="current-password" required value={cur} onChange={(e) => setCur(e.target.value)} /></Field>
-      <Field label="New password"><input type="password" autoComplete="new-password" required minLength={10} value={pw} onChange={(e) => setPw(e.target.value)} /></Field>
+      <Field label="Temporary password or PIN"><input type="password" autoComplete="current-password" required value={cur} onChange={(e) => setCur(e.target.value)} /></Field>
+      <Field label="New password or PIN"><input type="password" autoComplete="new-password" required minLength={4} value={pw} onChange={(e) => setPw(e.target.value)} /></Field>
       <Field label="Confirm new password"><input type="password" autoComplete="new-password" required value={pw2} onChange={(e) => setPw2(e.target.value)} /></Field>
       <Btn variant="key" type="submit" className="block" disabled={busy}>Save and continue</Btn>
       <Btn variant="quiet" className="block" onClick={onLogout}>Cancel</Btn>
@@ -121,7 +121,7 @@ function Reset({ token }) {
       <h2>Choose a new password</h2>
       <p className="sub">At least 10 characters with letters and numbers.</p>
       <ErrorBox error={err} />
-      <Field label="New password"><input type="password" autoComplete="new-password" required minLength={10} autoFocus value={pw} onChange={(e) => setPw(e.target.value)} /></Field>
+      <Field label="New password or PIN"><input type="password" autoComplete="new-password" required minLength={4} autoFocus value={pw} onChange={(e) => setPw(e.target.value)} /></Field>
       <Field label="Confirm"><input type="password" autoComplete="new-password" required value={pw2} onChange={(e) => setPw2(e.target.value)} /></Field>
       <Btn variant="key" type="submit" className="block" disabled={busy || !token}>Save password</Btn>
       {!token && <div className="error">This link is missing its token. Ask your administrator for a new one.</div>}
